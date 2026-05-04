@@ -1,10 +1,3 @@
-/**
- * Auth.js (NextAuth v5) configuration.
- *
- * Strategy: Credentials provider with bcrypt password check against Postgres.
- * Session is stored as a signed JWT — no database session table required.
- */
-
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
@@ -22,23 +15,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        try {
+          const parsed = loginSchema.safeParse(credentials);
+          if (!parsed.success) return null;
 
-        const { email, password } = parsed.data;
+          const { email, password } = parsed.data;
+          const user = await prisma.user.findUnique({ where: { email } });
+          if (!user) return null;
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
+          const passwordValid = await compare(password, user.passwordHash);
+          if (!passwordValid) return null;
 
-        const passwordValid = await compare(password, user.passwordHash);
-        if (!passwordValid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? undefined,
-          role: user.role,
-        };
+          return { id: user.id, email: user.email, name: user.name ?? undefined, role: user.role };
+        } catch {
+          // DB not ready or other error — return null so NextAuth shows "invalid credentials"
+          return null;
+        }
       },
     }),
   ],
@@ -47,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        // @ts-expect-error — custom field added to User
+        // @ts-expect-error custom field
         token.role = user.role;
       }
       return token;
@@ -55,7 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        // @ts-expect-error — propagate role to session
+        // @ts-expect-error custom field
         session.user.role = token.role;
       }
       return session;
