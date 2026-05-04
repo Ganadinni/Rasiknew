@@ -1,11 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 
-/**
- * Edge-safe auth config — no bcryptjs or Prisma imports.
- * Used by middleware (Edge Runtime) only.
- * Full auth config with credentials provider lives in src/lib/auth.ts.
- */
 export const authConfig: NextAuthConfig = {
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   pages: {
     signIn: "/admin/login",
     error: "/admin/login",

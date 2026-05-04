@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/recipes", label: "Recipes", icon: "◉" },
   { href: "/admin/customer-requests", label: "Customer Requests", icon: "◎" },
   { href: "/admin/rules", label: "Prompt Rules", icon: "◆", adminOnly: true },
+  { href: "/admin/users", label: "Users", icon: "◈", adminOnly: true },
   { href: "/admin/settings", label: "Settings", icon: "⚙", adminOnly: true },
 ];
 
