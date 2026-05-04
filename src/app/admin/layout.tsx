@@ -2,9 +2,14 @@ import { auth } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // auth() throws when NEXTAUTH_SECRET/AUTH_SECRET is missing or DB is unreachable.
+    // Render children so the login page still shows — middleware handles redirects.
+  }
 
-  // Login page renders without shell (middleware handles the redirect)
   if (!session?.user) return <>{children}</>;
 
   return (
