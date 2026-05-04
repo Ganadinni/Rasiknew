@@ -1,67 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/session";
 import { importProducts } from "@/lib/catalog/importer";
+import { put } from "@vercel/blob";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Only admins can import
-  const role = (session.user as { role?: string }).role;
-  if (role !== "ADMIN") {
-    return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
 
   if (!file) {
-    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
   }
 
   const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith(".csv") && !fileName.endsWith(".xlsx") && !fileName.endsWith(".xls")) {
+    return NextResponse.json({ error: "Unsupported file. Upload a CSV, XLSX, or XLS file." }, { status: 400 });
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  let rows: Record<string, unknown>[] = [];
+  // Store original file to Vercel Blob
+  let blobUrl: string | undefined;
+  try {
+    const blob = await put(`catalog/${Date.now()}-${file.name}`, buffer, {
+      access: "public",
+      contentType: file.type || "application/octet-stream",
+    });
+    blobUrl = blob.url;
+  } catch (e) {
+    console.error("[import] Blob upload failed:", e);
+    // Non-fatal — continue with import even if blob storage fails
+  }
 
+  // Parse file into rows
+  let rows: Record<string, unknown>[] = [];
   try {
     if (fileName.endsWith(".csv")) {
       rows = parseCSV(buffer.toString("utf-8"));
-    } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
-      rows = await parseXLSX(buffer);
     } else {
-      return NextResponse.json({ error: "Unsupported file type. Use CSV, XLSX, or XLS." }, { status: 400 });
+      rows = await parseXLSX(buffer);
     }
   } catch (e) {
     return NextResponse.json(
-      { error: `Failed to parse file: ${e instanceof Error ? e.message : "Unknown error"}` },
+      { error: `Could not read file: ${e instanceof Error ? e.message : "Unknown error"}` },
       { status: 400 }
     );
   }
 
   const result = await importProducts(rows);
-  return NextResponse.json(result);
+  return NextResponse.json({ ...result, blobUrl });
 }
 
 function parseCSV(content: string): Record<string, unknown>[] {
   const lines = content.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return [];
-
   const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
-  const rows: Record<string, unknown>[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const vals = splitCSVLine(lines[i]);
+  return lines.slice(1).map((line) => {
+    const vals = splitCSVLine(line);
     const row: Record<string, unknown> = {};
-    headers.forEach((h, idx) => {
-      row[h] = vals[idx]?.trim().replace(/^"|"$/g, "") ?? "";
-    });
-    rows.push(row);
-  }
-
-  return rows;
+    headers.forEach((h, i) => { row[h] = vals[i]?.trim().replace(/^"|"$/g, "") ?? ""; });
+    return row;
+  });
 }
 
 function splitCSVLine(line: string): string[] {
