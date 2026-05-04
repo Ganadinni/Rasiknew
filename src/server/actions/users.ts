@@ -1,6 +1,6 @@
 "use server";
 
-import { getServerSession } from "@/lib/session";
+import { isAuthenticated } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { Role } from "@prisma/client";
@@ -8,9 +8,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 async function requireAdmin() {
-  const session = await getServerSession();
-  if (!session?.id || session.role !== "ADMIN") throw new Error("Forbidden");
-  return session.id;
+  if (!(await isAuthenticated())) throw new Error("Forbidden");
 }
 
 const createUserSchema = z.object({
@@ -35,15 +33,12 @@ export async function createUser(formData: FormData) {
   if (existing) throw new Error("A user with this email already exists.");
 
   const passwordHash = await hash(password, 12);
-  await prisma.user.create({
-    data: { email, name, passwordHash, role: role as Role },
-  });
+  await prisma.user.create({ data: { email, name, passwordHash, role: role as Role } });
   revalidatePath("/admin/users");
 }
 
 export async function deleteUser(id: string) {
-  const adminId = await requireAdmin();
-  if (id === adminId) throw new Error("Cannot delete your own account.");
+  await requireAdmin();
   await prisma.user.delete({ where: { id } });
   revalidatePath("/admin/users");
 }
