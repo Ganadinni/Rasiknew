@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { callAI } from "@/lib/ai/provider";
 import { buildSystemPrompt } from "@/lib/ai/systemPrompt";
@@ -8,8 +8,8 @@ import { MessageRole } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const session = await getServerSession();
+    if (!session?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
     if (!chatSession) {
       chatSession = await prisma.chatSession.create({
-        data: { userId: session.user.id, title: message.slice(0, 80) },
+        data: { userId: session.id, title: message.slice(0, 80) },
       });
     }
 

@@ -1,12 +1,6 @@
 "use client";
 
-/**
- * Client-side login form.
- * Calls next-auth signIn("credentials") and handles redirect/error state.
- */
-
 import { useState, FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export function LoginForm() {
@@ -21,21 +15,26 @@ export function LoginForm() {
     setError(null);
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-    setLoading(false);
+      if (!res.ok) {
+        setError(data.error ?? "Invalid email or password.");
+        setLoading(false);
+        return;
+      }
 
-    if (result?.error) {
-      setError("Invalid email or password.");
-      return;
+      router.push("/admin/dashboard");
+      router.refresh();
+    } catch {
+      setError("Could not connect to server. Please try again.");
+      setLoading(false);
     }
-
-    router.push("/admin/dashboard");
-    router.refresh();
   }
 
   return (
@@ -45,55 +44,27 @@ export function LoginForm() {
           {error}
         </div>
       )}
-
       <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700 mb-1.5"
-        >
-          Email address
-        </label>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
         <input
-          id="email"
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900
-                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400
-                     focus:border-transparent transition"
+          id="email" type="email" required autoComplete="email"
+          value={email} onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
           placeholder="admin@teaplanet.com"
         />
       </div>
-
       <div>
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700 mb-1.5"
-        >
-          Password
-        </label>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
         <input
-          id="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900
-                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400
-                     focus:border-transparent transition"
+          id="password" type="password" required autoComplete="current-password"
+          value={password} onChange={(e) => setPassword(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
           placeholder="••••••••"
         />
       </div>
-
       <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white
-                   font-semibold rounded-lg py-2.5 text-sm transition-colors focus:outline-none
-                   focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
+        type="submit" disabled={loading}
+        className="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-semibold rounded-lg py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { Role } from "@prisma/client";
@@ -8,10 +8,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 async function requireAdmin() {
-  const session = await auth();
-  // @ts-expect-error custom role field
-  if (!session?.user?.id || session.user.role !== "ADMIN") throw new Error("Forbidden");
-  return session.user.id;
+  const session = await getServerSession();
+  if (!session?.id || session.role !== "ADMIN") throw new Error("Forbidden");
+  return session.id;
 }
 
 const createUserSchema = z.object({

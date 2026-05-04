@@ -1,29 +1,24 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 async function requireAuth() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return session.user.id;
+  const session = await getServerSession();
+  if (!session?.id) throw new Error("Unauthorized");
+  return session.id;
 }
 
 export async function deleteRecipe(id: string) {
-  const userId = await requireAuth();
-  const recipe = await prisma.recipe.findUnique({ where: { id } });
-  if (!recipe) throw new Error("Not found");
+  await requireAuth();
   await prisma.recipe.delete({ where: { id } });
   revalidatePath("/admin/recipes");
 }
 
 export async function duplicateRecipe(id: string) {
   const userId = await requireAuth();
-  const original = await prisma.recipe.findUnique({
-    where: { id },
-    include: { ingredients: true },
-  });
+  const original = await prisma.recipe.findUnique({ where: { id }, include: { ingredients: true } });
   if (!original) throw new Error("Not found");
 
   await prisma.recipe.create({
