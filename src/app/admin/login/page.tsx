@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/admin/LoginForm";
+import { MascotImage } from "@/components/MascotImage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin Login | Rasik – Culinary Maestro" };
@@ -6,10 +7,10 @@ export const metadata: Metadata = { title: "Admin Login | Rasik – Culinary Mae
 export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-brand-50">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md px-4">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-4">
-            <span className="text-2xl text-white font-bold">R</span>
+          <div className="flex justify-center mb-4">
+            <MascotImage size={96} className="ring-4 ring-brand-100 shadow-lg" />
           </div>
           <h1 className="text-3xl font-bold text-brand-900">Rasik</h1>
           <p className="text-brand-600 text-sm mt-1">Culinary Maestro · The Tea Planet</p>

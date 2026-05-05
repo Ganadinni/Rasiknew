@@ -1,13 +1,11 @@
 "use server";
 
-import { getServerSession } from "@/lib/session";
+import { isAuthenticated } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 async function requireAuth() {
-  const session = await getServerSession();
-  if (!session?.id) throw new Error("Unauthorized");
-  return session.id;
+  if (!(await isAuthenticated())) throw new Error("Unauthorized");
 }
 
 export async function deleteRecipe(id: string) {
@@ -17,7 +15,7 @@ export async function deleteRecipe(id: string) {
 }
 
 export async function duplicateRecipe(id: string) {
-  const userId = await requireAuth();
+  await requireAuth();
   const original = await prisma.recipe.findUnique({ where: { id }, include: { ingredients: true } });
   if (!original) throw new Error("Not found");
 
@@ -28,7 +26,7 @@ export async function duplicateRecipe(id: string) {
       application: original.application,
       portion: original.portion,
       contentJson: original.contentJson as object,
-      createdById: userId,
+      createdById: original.createdById,
       ingredients: {
         create: original.ingredients.map((ing) => ({
           productId: ing.productId,

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MascotImage } from "@/components/MascotImage";
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "⊞" },
@@ -14,23 +15,26 @@ const NAV = [
   { href: "/admin/settings", label: "Settings", icon: "⚙", adminOnly: true },
 ];
 
-export function Sidebar({ role }: { role: string }) {
+export function Sidebar({ role, onClose }: { role: string; onClose?: () => void }) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
 
   return (
-    <aside className="w-56 bg-brand-900 flex flex-col shrink-0">
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-brand-800">
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold text-sm">
-            R
-          </span>
+    <aside className="w-64 md:w-56 h-full bg-brand-900 flex flex-col">
+      {/* Logo + close */}
+      <div className="px-4 py-4 border-b border-brand-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <MascotImage size={40} />
           <div>
             <p className="text-white font-semibold text-sm leading-tight">Rasik</p>
             <p className="text-brand-400 text-xs">Culinary Maestro</p>
           </div>
         </div>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden text-brand-400 hover:text-white p-1 rounded transition-colors" aria-label="Close menu">
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -38,16 +42,12 @@ export function Sidebar({ role }: { role: string }) {
         {NAV.filter((item) => !item.adminOnly || isAdmin).map((item) => {
           const active = pathname.startsWith(item.href);
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                active
-                  ? "bg-brand-500 text-white font-medium"
-                  : "text-brand-300 hover:bg-brand-800 hover:text-white"
+            <Link key={item.href} href={item.href} onClick={onClose}
+              className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                active ? "bg-brand-500 text-white font-medium" : "text-brand-300 hover:bg-brand-800 hover:text-white"
               }`}
             >
-              <span className="text-base w-5 text-center">{item.icon}</span>
+              <span className="text-base w-5 text-center shrink-0">{item.icon}</span>
               {item.label}
             </Link>
           );
@@ -56,10 +56,8 @@ export function Sidebar({ role }: { role: string }) {
 
       {/* Import shortcut */}
       <div className="px-4 py-4 border-t border-brand-800">
-        <Link
-          href="/admin/products/import"
-          className="block text-center text-xs bg-brand-600 hover:bg-brand-500 text-white rounded-lg py-2 transition-colors"
-        >
+        <Link href="/admin/products/import" onClick={onClose}
+          className="block text-center text-xs bg-brand-600 hover:bg-brand-500 text-white rounded-lg py-2.5 transition-colors">
           + Import Catalog
         </Link>
       </div>

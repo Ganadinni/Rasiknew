@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "@/lib/session";
+import { isAuthenticated } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { callAI } from "@/lib/ai/provider";
 import { buildSystemPrompt } from "@/lib/ai/systemPrompt";
 import { buildCatalogContext } from "@/lib/ai/catalogContext";
-import { MessageRole } from "@prisma/client";
+import { MessageRole, Role } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session?.id) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,6 +17,12 @@ export async function POST(req: NextRequest) {
 
     if (!message?.trim()) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
+    // Get admin user id for session tracking
+    const adminUser = await prisma.user.findFirst({ where: { role: Role.ADMIN } });
+    if (!adminUser) {
+      return NextResponse.json({ error: "Run /setup first to initialise the database." }, { status: 503 });
     }
 
     const rules = await prisma.promptRule.findMany({
@@ -35,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
     if (!chatSession) {
       chatSession = await prisma.chatSession.create({
-        data: { userId: session.id, title: message.slice(0, 80) },
+        data: { userId: adminUser.id, title: message.slice(0, 80) },
       });
     }
 

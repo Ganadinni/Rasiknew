@@ -1,12 +1,14 @@
-import { getServerSession } from "@/lib/session";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { cookies } from "next/headers";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
-  if (!session) return <>{children}</>;
+  const store = await cookies();
+  const isLoggedIn = !!store.get("rasik-auth");
+
+  if (!isLoggedIn) return <>{children}</>;
 
   return (
-    <AdminShell user={{ name: session.name, email: session.email, role: session.role }}>
+    <AdminShell user={{ name: "Admin", email: "", role: "ADMIN" }}>
       {children}
     </AdminShell>
   );
