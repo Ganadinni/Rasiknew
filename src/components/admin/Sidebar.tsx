@@ -25,7 +25,7 @@ export function Sidebar({ role, onClose }: { role: string; onClose?: () => void 
       <div className="px-4 py-4 border-b border-brand-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-brand-800">
-            <Image src="/mascot.png" alt="Rasik" width={40} height={40} className="object-cover w-full h-full" />
+            <Image src="/mascot.png" alt="Rasik" width={40} height={40} className="object-cover object-top w-full h-full scale-125" />
           </div>
           <div>
             <p className="text-white font-semibold text-sm leading-tight">Rasik</p>
