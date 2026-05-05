@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         <StatCard label="Products" value={products} sub="in catalog" color="amber" />
         <StatCard label="Recipes" value={recipes} sub="saved" color="green" />
         <StatCard label="Chat Sessions" value={chatSessions} sub="total" color="blue" />
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800">Recent Recipes</h2>
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
 
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
           <h2 className="font-semibold text-gray-800 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {[
               { href: "/admin/chat", label: "Ask Rasik", sub: "Generate recipes & content", icon: "✦" },
               { href: "/admin/products/import", label: "Import Catalog", sub: "Upload CSV or XLSX", icon: "📂" },
