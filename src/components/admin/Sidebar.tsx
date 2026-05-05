@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MascotImage } from "@/components/MascotImage";
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "⊞" },
@@ -21,12 +21,10 @@ export function Sidebar({ role, onClose }: { role: string; onClose?: () => void 
 
   return (
     <aside className="w-64 md:w-56 h-full bg-brand-900 flex flex-col">
-      {/* Logo + close button */}
+      {/* Logo + close */}
       <div className="px-4 py-4 border-b border-brand-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-brand-800">
-            <Image src="/mascot.png" alt="Rasik" width={40} height={40} className="object-cover object-top w-full h-full scale-125" />
-          </div>
+          <MascotImage size={40} />
           <div>
             <p className="text-white font-semibold text-sm leading-tight">Rasik</p>
             <p className="text-brand-400 text-xs">Culinary Maestro</p>
